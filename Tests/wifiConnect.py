@@ -16,7 +16,7 @@ timeInterval = 30
 
 # Função assíncrona para verificar conexão Wi-Fi
 async def is_wifi_connected():
-    global wifiFlag
+
     while True:
         try:
             # Executa o comando nmcli para verificar conexões ativas
@@ -44,25 +44,3 @@ async def is_wifi_connected():
 
         await asyncio.sleep(5)
 
-# Tarefa a ser executada
-def execute_task():
-    backupDataBase.backup_to_csv(host, database, user, password, query, output_file)
-
-# Função principal
-async def main():
-    global lastWiFiAcess
-    # Inicia a verificação de Wi-Fi em paralelo
-    wifi_task = asyncio.create_task(is_wifi_connected())
-
-    while True:
-        if wifiFlag == 1:
-            if time.time() - lastWiFiAcess > timeInterval:
-                execute_task()
-                lastWiFiAcess = time.time()
-            else:
-                print("Aguardando intervalo...\n")
-        await asyncio.sleep(1)
-
-# Ponto de entrada
-if __name__ == "__main__":
-    asyncio.run(main())
