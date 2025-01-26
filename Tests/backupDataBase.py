@@ -1,5 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
+import asyncio
+
 
 def backup_to_csv(host, database, user, password, query, output_file):
     try:
@@ -19,4 +21,17 @@ def backup_to_csv(host, database, user, password, query, output_file):
     
     finally:
         print("Conexão com o banco de dados encerrada.")
+
+async def backup_if_wifi(host, database, user, password, query, output_file, wifi_event):
+
+    timeInterval = 30
+
+    while True:
+        await wifi_event.wait()  # Espera até que o Wi-Fi esteja conectado
+        try:
+            backup_to_csv(host, database, user, password, query, output_file)
+            print("Backup realizado com sucesso!")
+        except Exception as e:
+            print(f"Erro ao realizar backup: {e}")
+        await asyncio.sleep(timeInterval)
 

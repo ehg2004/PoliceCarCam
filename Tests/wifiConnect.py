@@ -15,8 +15,7 @@ lastWiFiAcess = 0
 timeInterval = 30
 
 # Função assíncrona para verificar conexão Wi-Fi
-async def is_wifi_connected():
-
+async def is_wifi_connected(wifi_event):
     while True:
         try:
             # Executa o comando nmcli para verificar conexões ativas
@@ -27,20 +26,23 @@ async def is_wifi_connected():
             )
             stdout, stderr = await process.communicate()
 
-            # Verifica se há alguma conexão Wi-Fi ativa
+            if process.returncode != 0:
+                print(f"Erro no comando nmcli: {stderr.decode()}")
+                wifi_event.clear()
+                continue
+
             for line in stdout.decode().splitlines():
                 active, conn_type = line.split(":")
                 if active == "activated" and conn_type == "802-11-wireless":
                     print("Conectado ao Wi-Fi!")
-                    wifiFlag = 1
+                    wifi_event.set()
                     break
             else:
                 print("Não há conexão Wi-Fi ativa.")
-                wifiFlag = 0
-
+                wifi_event.clear()
         except Exception as e:
             print(f"Erro inesperado: {e}")
-            wifiFlag = 0
+            wifi_event.clear()
 
         await asyncio.sleep(5)
 
