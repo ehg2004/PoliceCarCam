@@ -45,15 +45,16 @@ def convert_to_decimal(raw_value, direction):
 
 def read_gps_from_uart6():
     try:
-        # Configurar a porta UART6 (substitua por /dev/ttyS6 se necessário)
+        # Configurar a porta UART6 
         uart_port = "/dev/ttyS6"
         baud_rate = 9600  # Taxa de comunicação padrão do módulo GPS (verifique no manual do módulo)
-        
+        readFlag = 0
+
         # Abrir a porta serial
         with serial.Serial(uart_port, baud_rate, timeout=1) as ser:
             print(f"Lendo dados do GPS na porta {uart_port} com baud rate {baud_rate}...\n")
             
-            while True:
+            while readFlag == 0:
                 # Ler uma linha de dados do GPS
                 line = ser.readline().decode("utf-8", errors="ignore").strip()
                 
@@ -63,6 +64,8 @@ def read_gps_from_uart6():
                         latitude, longitude = parse_gpgll_message(line)
                         if latitude is not None and longitude is not None:
                             print(f"Latitude: {latitude:.6f}, Longitude: {longitude:.6f}")
+                            readFlag = 1
+                            # return latitude, longitude
                         else:
                             print("Mensagem GPGLL inválida ou incompleta.")
     except serial.SerialException as e:

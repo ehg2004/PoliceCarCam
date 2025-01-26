@@ -1,6 +1,6 @@
 import gpiod
 import select
-
+import asyncio
 from datetime import timedelta
 from gpiod.line import Bias, Edge
 
@@ -13,60 +13,63 @@ def edge_type_str(event):
     return "Unknown"
 
 
-def async_watch_line_value(chip_path, line_offset, done_fd):
-    # Assume a button connecting the pin to ground,
-    # so pull it up and provide some debounce.
+async def async_watch_line_value(chip_path, line_offset, stop_event, event_handler):
+    # Configura o GPIO com debounce e detecção de bordas
     with gpiod.request_lines(
         chip_path,
         consumer="async-watch-line-value",
         config={
             line_offset: gpiod.LineSettings(
-                edge_detection=Edge.BOTH,
+                edge_detection=Edge.FALLING,
                 bias=Bias.PULL_UP,
                 debounce_period=timedelta(milliseconds=10),
             )
         },
     ) as request:
+        loop = asyncio.get_event_loop()
         poll = select.poll()
         poll.register(request.fd, select.POLLIN)
-        # Other fds could be registered with the poll and be handled
-        # separately using the return value (fd, event) from poll():
-        poll.register(done_fd, select.POLLIN)
-        while True:
-            for fd, _event in poll.poll():
-                if fd == done_fd:
-                    # perform any cleanup before exiting...
+
+        while not stop_event.is_set():
+            # Aguarda eventos do GPIO ou do stop_event
+            events = await loop.run_in_executor(None, poll.poll, 1000)  # Timeout de 1000ms
+            for fd, _event in events:
+                if stop_event.is_set():
                     return
-                # handle any edge events
-                for event in request.read_edge_events():
-                    print(
-                        "offset: {}  type: {:<7}  event #{}".format(
-                            event.line_offset, edge_type_str(event), event.line_seqno
+                if fd == request.fd:
+                    # Lê e processa eventos de borda
+                    for event in request.read_edge_events():
+                        print(
+                            "offset: {}  type: {:<7}  event #{}".format(
+                                event.line_offset, edge_type_str(event), event.line_seqno
+                            )
                         )
-                    )
+                        event_handler()
+                        #colocar a ação que será realizada, iniciar gravação ou salvar loc
 
 
-if __name__ == "__main__":
-    import os
-    import threading
+# async def main():
+#     # Define um evento para sinalizar parada
+#     stop_event = asyncio.Event()
 
-    # run the async executor (select.poll) in a thread to demonstrate a graceful exit.
-    done_fd = os.eventfd(0)
+#     try:
+#         # Inicia a tarefa assíncrona de monitoramento do GPIO
+#         monitor_task = asyncio.create_task(
+#             async_watch_line_value("/dev/gpiochip1", 31, stop_event)
+#         )
 
-    def bg_thread():
-        try:
-            async_watch_line_value("/dev/gpiochip1", 31, done_fd)
-        except OSError as ex:
-            print(ex, "\nCustomise the example configuration to suit your situation")
-        print("background thread exiting...")
+#         # Roda indefinidamente até interrupção manual
+#         print("Monitoramento iniciado. Pressione Ctrl+C para encerrar.")
+#         while not stop_event.is_set():
+#             await asyncio.sleep(1)
 
-    t = threading.Thread(target=bg_thread)
-    t.start()
+#     except KeyboardInterrupt:
+#         print("\nInterrupção manual detectada. Encerrando...")
+#     finally:
+#         stop_event.set()  # Sinaliza para parar a tarefa
+#         await monitor_task  # Aguarda o término da tarefa
+#         print("Monitoramento encerrado.")
 
-    # Wait for two minutes, unless bg_thread exits earlier, then graceful exit.
-    t.join(timeout=120)
-    if t.is_alive():
-        os.eventfd_write(done_fd, 1)
-        t.join()
-    os.close(done_fd)
-    print("main thread exiting...")
+
+# if __name__ == "__main__":
+#     asyncio.run(main())
