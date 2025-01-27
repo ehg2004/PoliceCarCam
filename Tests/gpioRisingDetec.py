@@ -13,7 +13,7 @@ def edge_type_str(event):
     return "Unknown"
 
 
-async def async_watch_line_value(chip_path, line_offset, stop_event, event_handler):
+async def async_watch_line_value(chip_path, line_offset, stop_event, event_handler, event_listener):
     # Configura o GPIO com debounce e detecção de bordas
     with gpiod.request_lines(
         chip_path,
@@ -39,11 +39,7 @@ async def async_watch_line_value(chip_path, line_offset, stop_event, event_handl
                 if fd == request.fd:
                     # Lê e processa eventos de borda
                     for event in request.read_edge_events():
-                        print(
-                            "offset: {}  type: {:<7}  event #{}".format(
-                                event.line_offset, edge_type_str(event), event.line_seqno
-                            )
-                        )
+                        event_listener.set()
                         event_handler()
                         #colocar a ação que será realizada, iniciar gravação ou salvar loc
 

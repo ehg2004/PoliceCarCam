@@ -4,6 +4,7 @@ import backupDataBase
 import gpioRisingDetec as gpio
 import gpsCapture
 import wifiConnect as wc
+import camera
 
 async def main():
     #Configuração do banco
@@ -22,11 +23,15 @@ async def main():
     #Parametro wifi
     wifi_event = asyncio.Event()
 
+    buttom_event = asyncio.Event()
+    video_output = "video.mp4"
+
     try:
         await asyncio.gather(
             wc.is_wifi_connected(wifi_event),
             backupDataBase.backup_if_wifi(host, database, user, password, query, output_file, wifi_event),
-            gpio.async_watch_line_value(chip_path, line_offset, stop_event, gpsCapture.read_gps_from_uart6)
+            gpio.async_watch_line_value(chip_path, line_offset, stop_event, gpsCapture.read_gps_from_uart6, buttom_event),
+            camera.record_video_with_location(buttom_event, video_output)
         )
     except KeyboardInterrupt:
         print("\nInterrupção manual detectada. Encerrando...")
