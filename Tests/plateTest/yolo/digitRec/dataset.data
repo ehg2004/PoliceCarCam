@@ -1,0 +1,5 @@
+classes=10
+train=digitRec/train.txt
+valid=digitRec/test.txt
+names=digitRec/classes.names
+backup=digitRec/backup/

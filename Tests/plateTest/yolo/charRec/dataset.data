@@ -1,0 +1,5 @@
+classes=26
+train=charRec/train.txt
+valid=charRec/val.txt
+names=charRec/classes.names
+backup=charRec/backup/
