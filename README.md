@@ -23,3 +23,6 @@ bash get-networks.sh
 ## Se não for usar a placa dew video, tem que mudar na construtora do easyOCR no arquivo utils.py, e algumas coisas na main,
 ## Se quiser testar o ALPR-using-YOLOv8, clonar o https://github.com/Muhammad-Zeerak-Khan/Automatic-License-Plate-Recognition-using-YOLOv8.git e seguir o tutorial dnv, posso ter mudado alguma coisa na main
 ##
+bash run.sh -i samples/test -o output -c output/results.csv
+bash run.sh -i ../yj4Iu2-UFPR-ALPR/UFPR-ALPR-dataset/testing/track0092 -o output_ufpr/track0092 -c output_ufpr/track0092/results.csv
+
