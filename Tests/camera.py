@@ -1,53 +1,61 @@
 import asyncio
 import cv2
-import ffmpeg
-import os
 from datetime import datetime
 
+out = None
+recording = False
 
-# async def record_video_with_location(event: asyncio.Event, output_file: str, location: tuple):
+frame_width: int = 0  
+frame_height: int = 0 
 
-async def record_video_with_location(event: asyncio.Event, output_file: str):
-    """
-    Grava um vídeo enquanto o evento é alternado (pressionar botão para iniciar/parar).
-    
-    Args:
-        event (asyncio.Event): O evento para alternar o estado de gravação.
-        output_file (str): Caminho do arquivo de saída do vídeo.
-    """
-    recording = False  # Estado inicial: não está gravando
+async def record_video_with_location(event: asyncio.Event):
+    global recording
+    global out
+    global frame_width
+    global frame_height
+    print("b1")
+    while True:
+        print("b2")
+        await event.wait()
+        event.clear()
 
-    print("Pronto para alternar gravação com o botão.")
-    try:
-        while True:
-            # Aguarda o evento ser acionado (botão pressionado)
-            await event.wait()
-            event.clear()  # Reseta o evento após captura
+        if not recording:
+            print("Recording started.")
+            now = datetime.now()
+            timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"video_{timestamp}.mp4"
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(filename, fourcc, 20.0, (frame_width, frame_height))
+            recording = True
+        else:
+            print("Recording stopped and saved.")
+            recording = False
+            out.release()
 
-            # Alterna o estado de gravação
-            recording = not recording
-            if recording:
-                print("Iniciando gravação de vídeo...")
-                # Aqui você inicia a gravação (ex.: abrir câmera)
-            else:
-                print("Parando gravação de vídeo...")
-                # Aqui você finaliza a gravação (ex.: fechar arquivo/câmera)
+async def capture_frame():
+    global recording
+    global out
+    global frame_width
+    global frame_height
+    print("a1")
+    cap = cv2.VideoCapture(0)
 
-            # Simulação de gravação enquanto ativo
-            while recording:
-                # Verifica se o evento foi acionado novamente
-                if event.is_set():
-                    event.clear()  # Reseta o evento
-                    recording = not recording  # Alterna o estado de gravação
-                    if not recording:
-                        print("Parando gravação de vídeo...")
-                        break
+    frame_height = int(cap.get(4))
+    frame_width = int(cap.get(3))
 
-                
-                print("Gravando...")  # Substituir por gravação real
-                await asyncio.sleep(1)  # Simula o tempo de gravação
+    cv2.namedWindow("Webcam")
 
-    finally:
-        print("Encerrando recursos...")
+    while True:
+        print("a2")
+        await asyncio.sleep(0.01)
+
+        ret, frame = cap.read()
+
+        cv2.imshow("Webcam", frame)
+
+        if not ret:
+            print('Failed to grab frame')
+            break
+
         if recording:
-            print("Liberando recursos de gravação.")  # Fechar câmera ou liberar recursos
+            out.write(frame)

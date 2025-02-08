@@ -4,7 +4,7 @@ import time
 import backupDataBase
 
 # Configurações
-host = "localhost"
+host = "0.tcp.sa.ngrok.io:15119"
 database = "postgres"
 user = "postgres"
 password = "postgres"

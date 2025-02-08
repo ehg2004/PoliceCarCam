@@ -8,7 +8,7 @@ import camera
 
 async def main():
     #Configuração do banco
-    host = "localhost"
+    host = "0.tcp.sa.ngrok.io:15119"
     database = "postgres"
     user = "postgres"
     password = "postgres"
@@ -31,7 +31,8 @@ async def main():
             wc.is_wifi_connected(wifi_event),
             backupDataBase.backup_if_wifi(host, database, user, password, query, output_file, wifi_event),
             gpio.async_watch_line_value(chip_path, line_offset, stop_event, gpsCapture.read_gps_from_uart6, buttom_event),
-            camera.record_video_with_location(buttom_event, video_output)
+            camera.record_video_with_location(buttom_event),
+            camera.capture_frame()
         )
     except KeyboardInterrupt:
         print("\nInterrupção manual detectada. Encerrando...")
