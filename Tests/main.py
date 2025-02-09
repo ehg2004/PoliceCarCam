@@ -5,6 +5,8 @@ import gpioRisingDetec as gpio
 import gpsCapture
 import wifiConnect as wc
 import camera
+import lcd
+import buzzer
 
 async def main():
     #Configuração do banco
@@ -25,6 +27,9 @@ async def main():
 
     buttom_event = asyncio.Event()
     video_output = "video.mp4"
+
+    lcd.escrever_lcd(" | ", ".|.")
+    buzzer.buzzer()
 
     try:
         await asyncio.gather(
