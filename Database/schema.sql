@@ -7,7 +7,7 @@ CREATE TYPE LOG_TYPE AS ENUM ('STOLEN', 'FUGITIVE_OWNER', 'OTHER');
 
 CREATE TABLE "vehicle"(
     "id" SERIAL NOT NULL,
-    "plate" CHAR(255) NOT NULL,
+    "plate" VARCHAR(255) NOT NULL,
     "model" VARCHAR(255) NOT NULL,
     "color" VARCHAR(255) NOT NULL,
     "brand" VARCHAR(255) NOT NULL,
