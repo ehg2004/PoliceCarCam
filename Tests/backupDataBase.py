@@ -69,6 +69,18 @@ def backup_to_sqlite():
         sqlite_conn.close()
         print("Conexão com o banco de dados encerrada.")
         
+def get_plate_from_database(plate: str):
+    sqlite_db = '../Database/local.db'
+    sqlite_conn = sqlite3.connect(sqlite_db)
+    cursor = sqlite_conn.cursor()
+    query = f'SELECT * FROM vehicle_log join vehicle on vehicle_log.vehicle_id = vehicle.id where vehicle.plate = "{plate}"'
+    print(query)
+    cursor.execute(query)
+    car_info = cursor.fetchone()
+    cursor.close()
+    print(car_info)
+    return car_info
+        
 def backup_to_csv(host, database, user, password, query, output_file):
     try:
         # Conectar ao banco de dados usando SQLAlchemy
