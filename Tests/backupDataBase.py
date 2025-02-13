@@ -74,42 +74,18 @@ def get_plate_from_database(plate: str):
     sqlite_conn = sqlite3.connect(sqlite_db)
     cursor = sqlite_conn.cursor()
     query = f'SELECT * FROM vehicle_log join vehicle on vehicle_log.vehicle_id = vehicle.id where vehicle.plate = "{plate}"'
-    print(query)
     cursor.execute(query)
     car_info = cursor.fetchone()
     cursor.close()
-    print(car_info)
     return car_info
-        
-def backup_to_csv(host, database, user, password, query, output_file):
-    try:
-        # Conectar ao banco de dados usando SQLAlchemy
-        engine = create_engine(f'postgresql://{user}:{password}@{host}/{database}')
-        print("Conexão com o banco de dados estabelecida com sucesso.")
 
-        # Executar a consulta SQL
-        df = pd.read_sql_query(query, engine)
-
-        # Exportar os dados para um arquivo CSV
-        df.to_csv(output_file, index=False)
-        print(f"Backup salvo em: {output_file}")
-    
-    except Exception as e:
-        print(f"Erro ao fazer o backup: {e}")
-    
-    finally:
-        print("Conexão com o banco de dados encerrada.")
-
-async def backup_if_wifi(host, database, user, password, query, output_file, wifi_event):
-
-    timeInterval = 30
-
+async def backup_if_wifi(wifi_event):
     while True:
-        await wifi_event.wait()  # Espera até que o Wi-Fi esteja conectado
+        await asyncio.sleep(3600) # Espera 30 segundos antes de tentar fazer o backup novamente
+        await wifi_event.wait() # Espera até que o Wi-Fi esteja conectado
         try:
-            backup_to_csv(host, database, user, password, query, output_file)
+            backup_to_sqlite() # Tenta fazer o backup
             print("Backup realizado com sucesso!")
         except Exception as e:
             print(f"Erro ao realizar backup: {e}")
-        await asyncio.sleep(timeInterval)
 
