@@ -1,18 +1,5 @@
-import subprocess
 import asyncio
-import time
-import backupDataBase
 
-# Configurações
-host = "0.tcp.sa.ngrok.io:15119"
-database = "postgres"
-user = "postgres"
-password = "postgres"
-query = "SELECT * FROM public.vehicle"
-output_file = "backup.csv"
-wifiFlag = 0
-lastWiFiAcess = 0
-timeInterval = 30
 
 # Função assíncrona para verificar conexão Wi-Fi
 async def is_wifi_connected(wifi_event):
@@ -20,9 +7,14 @@ async def is_wifi_connected(wifi_event):
         try:
             # Executa o comando nmcli para verificar conexões ativas
             process = await asyncio.create_subprocess_exec(
-                "nmcli", "-t", "-f", "STATE,TYPE", "connection", "show",
+                "nmcli",
+                "-t",
+                "-f",
+                "STATE,TYPE",
+                "connection",
+                "show",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await process.communicate()
 
@@ -45,4 +37,3 @@ async def is_wifi_connected(wifi_event):
             wifi_event.clear()
 
         await asyncio.sleep(5)
-

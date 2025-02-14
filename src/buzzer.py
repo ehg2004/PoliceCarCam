@@ -1,7 +1,8 @@
-import time
+import asyncio
 import gpiod
 
-def buzzer():
+
+async def buzzer():
     # Configurar o chip e a linha GPIO
     CHIP = "/dev/gpiochip4"  # Verifique qual gpiochip corresponde ao seu pino
     LINE_OFFSET = 110  # Altere para o número correto do GPIO
@@ -13,7 +14,7 @@ def buzzer():
 
     # Liga o buzzer por 1 segundo e depois desliga
     line.set_value(1)  # Liga
-    time.sleep(1)  
+    await asyncio.sleep(1)
     line.set_value(0)  # Desliga
 
     # Libera o GPIO

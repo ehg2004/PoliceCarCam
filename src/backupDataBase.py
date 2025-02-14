@@ -4,24 +4,25 @@ from sqlalchemy import create_engine, inspect
 import asyncio
 import sqlite3
 
+
 def backup_to_sqlite():
-    host = "localhost:5432"
-    database = "postgres"
-    user = "postgres"
-    password = "postgres"
-    sqlite_db = '../Database/local.db'
+    HOST = "localhost:5432"
+    DATABASE = "postgres"
+    USER = "postgres"
+    PASSWORD = "postgres"
+    SQLITE_DB = "../Database/local.db"
     try:
         # Connect to the SQLite database and get the date of the last update
-        sqlite_conn = sqlite3.connect(sqlite_db)
+        sqlite_conn = sqlite3.connect(SQLITE_DB)
         cursor = sqlite_conn.cursor()
         cursor.execute("SELECT MAX(updated_at) FROM vehicle_log")
         last_update_date = cursor.fetchone()[0]
         cursor.close()
-        
+
         # Connect to the PostgreSQL database using SQLAlchemy
-        engine = create_engine(f'postgresql://{user}:{password}@{host}/{database}')
+        engine = create_engine(f"postgresql://{USER}:{PASSWORD}@{HOST}/{DATABASE}")
         print("Conexão com o banco de dados estabelecida com sucesso.")
-        
+
         # Read tables from PostgreSQL database into Pandas DataFrames
         inspector = inspect(engine)
         table_names = inspector.get_table_names()
@@ -32,12 +33,16 @@ def backup_to_sqlite():
             else:
                 query = f"SELECT * FROM {table}"
             dataframes[table] = pd.read_sql_query(query, engine)
-        
+
         # Write DataFrames to SQLite database
         for table, df in dataframes.items():
             # Insert new rows
             for index, row in df.iterrows():
-                if not last_update_date or (last_update_date and row['created_at'] >= datetime.strptime(last_update_date, "%Y-%m-%d").date()):
+                if not last_update_date or (
+                    last_update_date
+                    and row["created_at"]
+                    >= datetime.strptime(last_update_date, "%Y-%m-%d").date()
+                ):
                     print(f"Inserting row {index} into table {table}")
                     insert_query = f"""
                     INSERT INTO {table} ({', '.join(df.columns)})
@@ -55,23 +60,27 @@ def backup_to_sqlite():
                 WHERE id = ?
                 """
                 cursor = sqlite_conn.cursor()
-                cursor.execute(update_query, tuple(row[col] for col in df.columns if col != 'id') + (row['id'],))
+                cursor.execute(
+                    update_query,
+                    tuple(row[col] for col in df.columns if col != "id") + (row["id"],),
+                )
                 sqlite_conn.commit()
                 cursor.close()
-        
+
         print("Backup concluído com sucesso.")
-    
+
     except Exception as e:
         print(f"Erro ao fazer o backup: {e}")
-    
+
     finally:
         engine.dispose()
         sqlite_conn.close()
         print("Conexão com o banco de dados encerrada.")
-        
+
+
 def get_plate_from_database(plate: str):
-    sqlite_db = '../Database/local.db'
-    sqlite_conn = sqlite3.connect(sqlite_db)
+    SQLITE_DB = "../Database/local.db"
+    sqlite_conn = sqlite3.connect(SQLITE_DB)
     cursor = sqlite_conn.cursor()
     query = f'SELECT * FROM vehicle_log join vehicle on vehicle_log.vehicle_id = vehicle.id where vehicle.plate = "{plate}"'
     cursor.execute(query)
@@ -79,13 +88,15 @@ def get_plate_from_database(plate: str):
     cursor.close()
     return car_info
 
+
 async def backup_if_wifi(wifi_event):
     while True:
-        await asyncio.sleep(3600) # Espera 30 segundos antes de tentar fazer o backup novamente
-        await wifi_event.wait() # Espera até que o Wi-Fi esteja conectado
+        await asyncio.sleep(
+            3600
+        )  # Espera 1 hora antes de tentar fazer o backup novamente
+        await wifi_event.wait()  # Espera até que o Wi-Fi esteja conectado
         try:
-            backup_to_sqlite() # Tenta fazer o backup
+            backup_to_sqlite()  # Tenta fazer o backup
             print("Backup realizado com sucesso!")
         except Exception as e:
             print(f"Erro ao realizar backup: {e}")
-
