@@ -564,46 +564,29 @@ def create_debug_directories():
     
     return debug_dirs
 
-def license_plate_recognition_pipeline(image_path, debug=False):
+def license_plate_recognition_pipeline(image):
     """
     Complete pipeline for license plate recognition with debug image saving.
     
     Args:
-        image_path: Path to the input image
+        image: The frame of the video
         debug: Boolean to enable/disable debug image saving
     
     Returns:
         plate_number: Recognized license plate number as string
         confidence: Overall confidence score
     """
-    # Create debug directories if debug mode is enabled
-    if debug:
-        debug_dirs = create_debug_directories()
-        
-    # Get filename without extension for debug saving
-    base_filename = os.path.splitext(os.path.basename(image_path))[0]
     
     # Read the image
-    image = cv2.imread(image_path)
     if image is None:
         print('Error: Unable to read image file')
         return None, 0
-
-    if debug:
-        cv2.imwrite(os.path.join(debug_dirs['main'], f'{base_filename}_original.jpg'), image)
 
     # Step 1: Detect license plate
     plates, plate_scores = detect_plate(image, config_lpRec)
     if not plates:
         print('No license plate detected')
         return None, 0
-
-    # Save detected plates
-    if debug:
-        for idx, (plate, score) in enumerate(zip(plates, plate_scores)):
-            plate_path = os.path.join(debug_dirs['plates'], 
-                                    f'{base_filename}_plate_{idx}_score_{score:.2f}.jpg')
-            cv2.imwrite(plate_path, plate)
 
     # Use the plate with highest confidence
     best_plate = plates[0]
@@ -613,13 +596,6 @@ def license_plate_recognition_pipeline(image_path, debug=False):
     char_images = segment_chars(best_plate, config_charSeg)
     if len(char_images) != 7:  # Expecting 7 characters
         print(f'Expected 7 characters, but found {len(char_images)}')
-        
-    # Save segmented characters
-    if debug:
-        for idx, char_img in enumerate(char_images):
-            char_path = os.path.join(debug_dirs['chars'], 
-                                   f'{base_filename}_char_{idx}.jpg')
-            cv2.imwrite(char_path, char_img)
 
     # Step 3 & 4: Recognize characters
     plate_number = ''
@@ -634,11 +610,6 @@ def license_plate_recognition_pipeline(image_path, debug=False):
                 plate_number += letter
                 total_confidence += confidence
                 recognition_results.append((i, letter, confidence, 'letter'))
-                
-                if debug:
-                    letter_path = os.path.join(debug_dirs['letters'], 
-                                             f'{base_filename}_letter_{i}_{letter}_{confidence:.2f}.jpg')
-                    cv2.imwrite(letter_path, char_images[i])
             else:
                 plate_number += '?'
 
@@ -650,47 +621,10 @@ def license_plate_recognition_pipeline(image_path, debug=False):
                 plate_number += str(digit)
                 total_confidence += confidence
                 recognition_results.append((i, digit, confidence, 'digit'))
-                
-                if debug:
-                    digit_path = os.path.join(debug_dirs['digits'], 
-                                            f'{base_filename}_digit_{i}_{digit}_{confidence:.2f}.jpg')
-                    cv2.imwrite(digit_path, char_images[i])
             else:
                 plate_number += '?'
 
     # Calculate average confidence
     average_confidence = total_confidence / (len(recognition_results) + 1)  # +1 for plate detection
 
-    # Save recognition summary
-    if debug:
-        summary_path = os.path.join(debug_dirs['main'], f'{base_filename}_summary.txt')
-        with open(summary_path, 'w') as f:
-            f.write(f"License Plate Recognition Summary\n")
-            f.write(f"================================\n")
-            f.write(f"Input Image: {image_path}\n")
-            f.write(f"Detected Plate Number: {plate_number}\n")
-            f.write(f"Average Confidence: {average_confidence:.2f}\n\n")
-            f.write(f"Plate Detection Score: {plate_confidence:.2f}\n\n")
-            f.write("Character Recognition Details:\n")
-            for pos, char, conf, char_type in recognition_results:
-                f.write(f"Position {pos}: {char} ({char_type}) - Confidence: {conf:.2f}\n")
-
     return plate_number, average_confidence
-
-
-
-
-# Example usage
-if __name__ == '__main__':
-    image_path = './car3.png'
-    
-    start_time = time.time()
-    plate_number, confidence = license_plate_recognition_pipeline(image_path, debug = True)
-    processing_time = time.time() - start_time
-
-    if plate_number:
-        print(f'Detected License Plate: {plate_number}')
-        print(f'Confidence: {confidence:.2f}')
-        print(f'Processing Time: {processing_time:.2f} seconds')
-    else:
-        print('Failed to detect license plate')
