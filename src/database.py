@@ -78,15 +78,21 @@ def backup_to_sqlite():
         print("Conexão com o banco de dados encerrada.")
 
 
-def get_plate_from_database(plate: str):
+def get_plate_from_database(plate: str) -> tuple[bool, str, str]:
     SQLITE_DB = "../Database/local.db"
     sqlite_conn = sqlite3.connect(SQLITE_DB)
     cursor = sqlite_conn.cursor()
-    query = f'SELECT * FROM vehicle_log join vehicle on vehicle_log.vehicle_id = vehicle.id where vehicle.plate = "{plate}"'
+    query = f'SELECT vehicle_log.type, vehicle_log.severity  FROM vehicle_log join vehicle on vehicle_log.vehicle_id = vehicle.id where vehicle.plate = "{plate}"'
     cursor.execute(query)
     car_info = cursor.fetchone()
     cursor.close()
-    return car_info
+    
+    if (car_info is None):
+        return (False, None, None)
+    
+    type = car_info[0]
+    severity = car_info[1]
+    return (True, type, severity)
 
 
 async def backup_if_wifi(wifi_event):

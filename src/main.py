@@ -4,6 +4,7 @@ import database
 import button
 import wifi
 import camera
+import neural_network
 
 
 global_out: cv2.VideoWriter = None
@@ -27,6 +28,7 @@ async def main():
             button.async_watch_line_value(stop_event, buttom_event),
             camera.record_video_with_location(buttom_event),
             camera.capture_frame(),
+            neural_network.detect_plate(),
         )
     except KeyboardInterrupt:
         print("\nInterrupção manual detectada. Encerrando...")
