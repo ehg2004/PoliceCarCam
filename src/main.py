@@ -1,8 +1,8 @@
 import asyncio
 import cv2
-import backupDataBase as database
-import gpioRisingDetec as gpio
-import wifiConnect as wc
+import database
+import button
+import wifi
 import camera
 
 
@@ -22,9 +22,9 @@ async def main():
 
     try:
         await asyncio.gather(
-            wc.is_wifi_connected(wifi_event),
+            wifi.is_wifi_connected(wifi_event),
             database.backup_if_wifi(wifi_event),
-            gpio.async_watch_line_value(stop_event, buttom_event),
+            button.async_watch_line_value(stop_event, buttom_event),
             camera.record_video_with_location(buttom_event),
             camera.capture_frame(),
         )

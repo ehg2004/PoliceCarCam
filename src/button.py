@@ -1,4 +1,4 @@
-from gpsCapture import read_gps_from_uart6
+from gps import read_gps_from_uart6
 import gpiod
 import select
 import asyncio
