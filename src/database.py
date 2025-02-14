@@ -86,10 +86,10 @@ def get_plate_from_database(plate: str) -> tuple[bool, str, str]:
     cursor.execute(query)
     car_info = cursor.fetchone()
     cursor.close()
-    
-    if (car_info is None):
+
+    if car_info is None:
         return (False, None, None)
-    
+
     type = car_info[0]
     severity = car_info[1]
     return (True, type, severity)
@@ -97,12 +97,12 @@ def get_plate_from_database(plate: str) -> tuple[bool, str, str]:
 
 async def backup_if_wifi(wifi_event):
     while True:
-        await asyncio.sleep(
-            3600
-        )  # Espera 1 hora antes de tentar fazer o backup novamente
         await wifi_event.wait()  # Espera até que o Wi-Fi esteja conectado
         try:
             backup_to_sqlite()  # Tenta fazer o backup
             print("Backup realizado com sucesso!")
         except Exception as e:
             print(f"Erro ao realizar backup: {e}")
+        await asyncio.sleep(
+            60
+        )  # Espera 1 minuto antes de tentar fazer o backup novamente

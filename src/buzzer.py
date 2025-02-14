@@ -2,6 +2,7 @@ import asyncio
 import gpiod
 
 
+# TODO: Test Buzzer
 async def buzzer():
     # Configurar o chip e a linha GPIO
     CHIP = "/dev/gpiochip4"  # Verifique qual gpiochip corresponde ao seu pino
