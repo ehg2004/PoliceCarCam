@@ -14,6 +14,7 @@ global_frame_width: int = 0
 global_frame_height: int = 0
 global_latitude: float = 0
 global_longitude: float = 0
+global_filename: str = ""
 
 
 async def main():

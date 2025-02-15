@@ -1,4 +1,5 @@
 import serial
+import main as g
 
 
 def parse_gpgll_message(line):
@@ -47,8 +48,6 @@ def convert_to_decimal(raw_value, direction):
 
 
 def read_gps_from_uart6():
-    global global_latitude
-    global global_longitude
     try:
         # Configurar a porta UART6
         UART_PORT = "/dev/ttyS6"
@@ -70,8 +69,8 @@ def read_gps_from_uart6():
                     if line.startswith("$GPGLL"):
                         latitude, longitude = parse_gpgll_message(line)
                         if latitude is not None and longitude is not None:
-                            global_latitude = latitude
-                            global_longitude = longitude
+                            g.global_latitude = latitude
+                            g.global_longitude = longitude
                             print(
                                 f"Latitude: {latitude:.6f}, Longitude: {longitude:.6f}"
                             )
