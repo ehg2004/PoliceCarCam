@@ -8,10 +8,10 @@ NMS_THRESH = 0.6
 NUM_CLS = 26  # Number of classes for letters A-Z
 MAX_BOXES = 500
 
-# MODEL_PATH = './neural_network/rknnModels/charRec.rknn'  # Path to  .rknn model
-# MODEL_PATH = './neural_network/rknnModels/quanti_charRec.rknn'  # Path to  .rknn model
-MODEL_PATH = './neural_network/rknnModels/kl_charRec.rknn'  # Path to  .rknn model
-# MODEL_PATH = './neural_network/rknnModels/mmse_charRec.rknn'  # Path to  .rknn model
+# RKNN_MODEL_PATH = './neural_network/rknnModels/charRec.rknn'  # Path to  .rknn model
+# RKNN_MODEL_PATH = './neural_network/rknnModels/quanti_charRec.rknn'  # Path to  .rknn model
+RKNN_MODEL_PATH = './neural_network/rknnModels/kl_charRec.rknn'  # Path to  .rknn model
+# RKNN_MODEL_PATH = './neural_network/rknnModels/mmse_charRec.rknn'  # Path to  .rknn model
 
 # Class labels for letters A-Z
 CLASSES = (

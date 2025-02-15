@@ -18,47 +18,38 @@ rknnDigit = RKNNLite(verbose=False)
 
 #Init lpRec
 if rknnPlate.load_rknn(config_lpRec.RKNN_MODEL_PATH) != 0:
-        print('Load RKNN model failed!')
-        return [], []
-
-if rknnPlate.init_runtime() != 0:
-    print('Init runtime environment failed!')
-    return [], []
-
+    print('Load RKNN model failed!')
+    exit(1)
+    
 #Init charSeg
 if rknnSeg.load_rknn(config_charSeg.RKNN_MODEL_PATH) != 0:
-        print('Load RKNN model failed!')
-        return [], []
-
-if rknnSeg.init_runtime() != 0:
-    print('Init runtime environment failed!')
-    return [], []
+    print('Load RKNN model failed!')
+    exit(1)
 
 #Init charRec
 if rknnChar.load_rknn(config_charRec.RKNN_MODEL_PATH) != 0:
-        print('Load RKNN model failed!')
-        return [], []
-
-if rknnChar.init_runtime() != 0:
-    print('Init runtime environment failed!')
-    return [], []
+    print('Load RKNN model failed!')
+    exit(1)
 
 #Init digitRec
 if rknnDigit.load_rknn(config_digitRec.RKNN_MODEL_PATH) != 0:
-        print('Load RKNN model failed!')
-        return [], []
-
-if rknnDigit.init_runtime() != 0:
-    print('Init runtime environment failed!')
-    return [], []
+    print('Load RKNN model failed!')
+    exit(1)
 
 
 
 def detect_plate(image, config):
+
     img = cv2.resize(image, (416, 448))
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_input = np.expand_dims(img_rgb, axis=0)
     img = img.astype(np.uint8)
+
+    # Init runtime environment
+    ret = rknnPlate.init_runtime()
+    if ret != 0:
+        print('Init runtime environment failed!')
+        return None, 0
 
     outputs = rknnPlate.inference(inputs=[img_input])
     rknnPlate.release()
@@ -70,7 +61,7 @@ def detect_plate(image, config):
         output = output.reshape(batch, SPAN, config.LISTSIZE, height, width)
         output = output.transpose(0, 3, 4, 1, 2)
         output = output[0]
-        input_data.append(output)
+        input_data.append(output)    # Release RKNN runtime
 
     boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
     if boxes is None:
@@ -106,10 +97,15 @@ def segment_chars(image,config):
     img = cv2.resize(image, (256, 96))
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_input = np.expand_dims(img_rgb, axis=0)
+
+    # Init runtime environment
+    ret = rknnSeg.init_runtime()
+    if ret != 0:
+        print('Init runtime environment failed!')
+        return None, 0
 
     # Inference
     outputs = rknnSeg.inference(inputs=[img_input])
-    rknnSeg.release()
 
     # Process outputs
     input_data = []
@@ -124,6 +120,8 @@ def segment_chars(image,config):
     # Use the char-specific post-processing
     boxes, classes, scores = yolov3_post_process_char_seg(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
     
+    rknnSeg.release()
+
     if boxes is None:
         print("No characters detected")
         return []
@@ -143,7 +141,7 @@ def segment_chars(image,config):
         bottom = min(image.shape[0], int(y + h))
         
         char_img = image[top:bottom, left:right]
-        
+
         # Resize to target dimensions (32x96)
         char_img = cv2.resize(char_img, (32, 96))
         cropped_chars.append(char_img)
@@ -162,6 +160,7 @@ def detect_digit(img, config):
         detected_digit: The detected digit (0-9) or None if no digit is detected
         confidence: Confidence score of the detection
     """
+    
     # Set input dimensions from config
     input_image_width = config.input_w
     input_image_height = config.input_h
@@ -170,26 +169,33 @@ def detect_digit(img, config):
     img = cv2.resize(img, (input_image_width, input_image_height))
     img = img.astype(np.uint8)
     img = np.expand_dims(img, axis=0)
+
+    # Init runtime environment
+    ret = rknnDigit.init_runtime()
+    if ret != 0:
+        print('Init runtime environment failed!')
+        return None, 0
 
     # Inference
     outputs = rknnDigit.inference(inputs=[img])
+
+    # Process outputs
+    input_data = []
+    LISTSIZE = 4 + 1 + config.NUM_CLS
+    for output in outputs:
+        batch, channels, height, width = output.shape
+        SPAN = channels // LISTSIZE
+        output = output.reshape(batch, SPAN, LISTSIZE, height, width)
+        output = output.transpose(0, 3, 4, 1, 2)
+        output = output[0]
+        input_data.append(output)
+
+    # Post-processing
+    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
+
     # Release RKNN runtime
     rknnDigit.release()
 
-    # Process outputs
-    input_data = []
-    LISTSIZE = 4 + 1 + config.NUM_CLS
-    for output in outputs:
-        batch, channels, height, width = output.shape
-        SPAN = channels // LISTSIZE
-        output = output.reshape(batch, SPAN, LISTSIZE, height, width)
-        output = output.transpose(0, 3, 4, 1, 2)
-        output = output[0]
-        input_data.append(output)
-
-    # Post-processing
-    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-
     # Return results
     if boxes is not None and len(boxes) > 0:
         # Return the digit with highest confidence
@@ -227,309 +233,33 @@ def detect_letter(image, config):
     img = cv2.resize(img, (input_image_width, input_image_height))
     img = img.astype(np.uint8)
     img = np.expand_dims(img, axis=0)
+
+    # Init runtime environment
+    ret = rknnChar.init_runtime()
+    if ret != 0:
+        print('Init runtime environment failed!')
+        return None, 0
+
 
     # Inference
     outputs = rknnChar.inference(inputs=[img])
+
+    # Process outputs
+    input_data = []
+    LISTSIZE = 4 + 1 + config.NUM_CLS
+    for output in outputs:
+        batch, channels, height, width = output.shape
+        SPAN = channels // LISTSIZE
+        output = output.reshape(batch, SPAN, LISTSIZE, height, width)
+        output = output.transpose(0, 3, 4, 1, 2)
+        output = output[0]
+        input_data.append(output)
+
+    # Post-processing
+    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
+
     # Release RKNN runtime
     rknnChar.release()
-
-    # Process outputs
-    input_data = []
-    LISTSIZE = 4 + 1 + config.NUM_CLS
-    for output in outputs:
-        batch, channels, height, width = output.shape
-        SPAN = channels // LISTSIZE
-        output = output.reshape(batch, SPAN, LISTSIZE, height, width)
-        output = output.transpose(0, 3, 4, 1, 2)
-        output = output[0]
-        input_data.append(output)
-
-    # Post-processing
-    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-
-    # Return results
-    if boxes is not None and len(boxes) > 0:
-        # Return the letter with highest confidence
-        highest_confidence_idx = np.argmax(scores)
-        detected_letter = config.CLASSES[classes[highest_confidence_idx]]
-        confidence = scores[highest_confidence_idx]
-        return detected_letter, confidence
-    else:
-        return None, 0
-
-def create_debug_directories():
-    """Create directories for debug images"""
-    debug_dirs = {
-        'main': 'debug_output',
-        'plates': 'debug_output/1_detected_plates',
-        'chars': 'debug_output/2_segmented_chars',
-        'letters': 'debug_output/3_recognized_letters',
-        'digits': 'debug_output/4_recognized_digits'
-    }
-    
-    for dir_path in debug_dirs.values():
-        os.makedirs(dir_path, exist_ok=True)
-    
-    return debug_dirs
-
-import os
-import numpy as np
-import cv2
-import time
-from rknnlite.api import RKNNLite
-
-from neural_network.utils import yolov3_post_process, yolov3_post_process_char_seg
-import neural_network.config_charRec as config_charRec
-import neural_network.config_charSeg as config_charSeg
-import neural_network.config_digitRec as config_digitRec
-import neural_network.config_lpRec as config_lpRec
-
-
-def detect_plate(image, config):
-    rknn = RKNNLite(verbose=False)
-    if rknn.load_rknn(config.RKNN_MODEL_PATH) != 0:
-        print('Load RKNN model failed!')
-        return [], []
-    
-    if rknn.init_runtime() != 0:
-        print('Init runtime environment failed!')
-        return [], []
-
-    img = cv2.resize(image, (416, 448))
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img_input = np.expand_dims(img_rgb, axis=0)
-    img = img.astype(np.uint8)
-
-    outputs = rknn.inference(inputs=[img_input])
-    rknn.release()
-
-    input_data = []
-    for output in outputs:
-        batch, channels, height, width = output.shape
-        SPAN = channels // config.LISTSIZE
-        output = output.reshape(batch, SPAN, config.LISTSIZE, height, width)
-        output = output.transpose(0, 3, 4, 1, 2)
-        output = output[0]
-        input_data.append(output)    # Release RKNN runtime
-    rknn.release()
-
-    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-    if boxes is None:
-        return [], []
-
-    detected_plates = []
-    for box in boxes:
-        x, y, w, h = box
-        x *= image.shape[1]
-        y *= image.shape[0]
-        w *= image.shape[1]
-        h *= image.shape[0]
-
-        # Expand box by 20% (10% on each side)
-        expand_x = int(w * 0.1)  # 10% of width
-        expand_y = int(h * 0.1)  # 10% of height
-
-        left = max(0, int(x - expand_x))
-        top = max(0, int(y - expand_y))
-        right = min(image.shape[1], int(x + w + expand_x))
-        bottom = min(image.shape[0], int(y + h + expand_y))
-        detected_plates.append(image[top:bottom, left:right])
-
-    return detected_plates, scores
-
-def segment_chars(image,config):
-    """
-    Segment characters from the input image.
-    Returns up to 7 highest-scoring character detections.
-    """
-    # Initialize RKNN
-    rknn = RKNNLite(verbose=False)
-    ret = rknn.load_rknn(config.RKNN_MODEL_PATH)
-    if ret != 0:
-        print('Load RKNN model failed!')
-        return []
-    
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed!')
-        return []
-
-    # Preprocess image
-    img = cv2.resize(image, (256, 96))
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img_input = np.expand_dims(img_rgb, axis=0)
-
-    # Inference
-    outputs = rknn.inference(inputs=[img_input])
-
-    # Process outputs
-    input_data = []
-    for output in outputs:
-        batch, channels, height, width = output.shape
-        SPAN = channels // config.LISTSIZE
-        output = output.reshape(batch, SPAN, config.LISTSIZE, height, width)
-        output = output.transpose(0, 3, 4, 1, 2)
-        output = output[0]
-        input_data.append(output)
-
-    # Use the char-specific post-processing
-    boxes, classes, scores = yolov3_post_process_char_seg(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-    
-    rknn.release()
-
-    if boxes is None:
-        print("No characters detected")
-        return []
-
-    # Crop characters
-    cropped_chars = []
-    for box in boxes:
-        x, y, w, h = box
-        x *= image.shape[1]
-        y *= image.shape[0]
-        w *= image.shape[1]
-        h *= image.shape[0]
-        
-        left = max(0, int(x))
-        top = max(0, int(y))
-        right = min(image.shape[1], int(x + w))
-        bottom = min(image.shape[0], int(y + h))
-        
-        char_img = image[top:bottom, left:right]
-
-        # Resize to target dimensions (32x96)
-        char_img = cv2.resize(char_img, (32, 96))
-        cropped_chars.append(char_img)
-
-    return cropped_chars
-
-def detect_digit(img, config):
-    """
-    Detect digit in an image using RKNN model.
-    
-    Args:
-        img: Numpy array of the image
-        config: Configuration module containing model path and other constants
-    
-    Returns:
-        detected_digit: The detected digit (0-9) or None if no digit is detected
-        confidence: Confidence score of the detection
-    """
-    # Create RKNN object
-    rknn = RKNNLite(verbose=False)
-
-    # Load RKNN model
-    ret = rknn.load_rknn(config.RKNN_MODEL_PATH)
-    if ret != 0:
-        print('Load RKNN model failed!')
-        return None, 0
-
-    # Set input dimensions from config
-    input_image_width = config.input_w
-    input_image_height = config.input_h
-
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (input_image_width, input_image_height))
-    img = img.astype(np.uint8)
-    img = np.expand_dims(img, axis=0)
-
-    # Init runtime environment
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed!')
-        return None, 0
-
-    # Inference
-    outputs = rknn.inference(inputs=[img])
-
-    # Process outputs
-    input_data = []
-    LISTSIZE = 4 + 1 + config.NUM_CLS
-    for output in outputs:
-        batch, channels, height, width = output.shape
-        SPAN = channels // LISTSIZE
-        output = output.reshape(batch, SPAN, LISTSIZE, height, width)
-        output = output.transpose(0, 3, 4, 1, 2)
-        output = output[0]
-        input_data.append(output)
-
-    # Post-processing
-    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-
-    # Release RKNN runtime
-    rknn.release()
-
-    # Return results
-    if boxes is not None and len(boxes) > 0:
-        # Return the digit with highest confidence
-        highest_confidence_idx = np.argmax(scores)
-        detected_digit = config.CLASSES[classes[highest_confidence_idx]]
-        confidence = scores[highest_confidence_idx]
-        return detected_digit, confidence
-    else:
-        return None, 0
-
-def detect_letter(image, config):
-    """
-    Detect letter in an OpenCV image using RKNN model.
-    
-    Args:
-        image: OpenCV image (numpy array in BGR format)
-        model_path: Path to the RKNN model file
-    
-    Returns:
-        detected_letter: The detected letter (A-Z) or None if no letter is detected
-        confidence: Confidence score of the detection
-    """
-    # Create RKNN object
-    rknn = RKNNLite(verbose=False)
-
-    # Load RKNN model
-    ret = rknn.load_rknn(config.MODEL_PATH)
-    if ret != 0:
-        print('Load RKNN model failed!')
-        return None, 0
-
-    # Set input dimensions
-    input_image_width = config.input_w
-    input_image_height = config.input_h
-
-    # Preprocess the image
-    if image is None:
-        print('Error: Invalid image input')
-        return None, 0
-
-    # Convert BGR to RGB and resize
-    img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (input_image_width, input_image_height))
-    img = img.astype(np.uint8)
-    img = np.expand_dims(img, axis=0)
-
-    # Init runtime environment
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed!')
-        return None, 0
-
-    # Inference
-    outputs = rknn.inference(inputs=[img])
-
-    # Process outputs
-    input_data = []
-    LISTSIZE = 4 + 1 + config.NUM_CLS
-    for output in outputs:
-        batch, channels, height, width = output.shape
-        SPAN = channels // LISTSIZE
-        output = output.reshape(batch, SPAN, LISTSIZE, height, width)
-        output = output.transpose(0, 3, 4, 1, 2)
-        output = output[0]
-        input_data.append(output)
-
-    # Post-processing
-    boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-
-    # Release RKNN runtime
-    rknn.release()
 
     # Return results
     if boxes is not None and len(boxes) > 0:
