@@ -7,4 +7,4 @@ NMS_THRESH = 0.6
 NUM_CLS = 10  # Number of classes
 MAX_BOXES = 500
 CLASSES = ( '0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-RKNN_MODEL_PATH = './rknnModels/kl_digitRec.rknn'
+RKNN_MODEL_PATH = './neural_network/rknnModels/kl_digitRec.rknn'

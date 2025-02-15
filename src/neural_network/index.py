@@ -4,15 +4,15 @@ import cv2
 import time
 from rknnlite.api import RKNNLite
 
-from utils import yolov3_post_process, yolov3_post_process_char_seg
-import config_charRec
-import config_charSeg
-import config_digitRec
-import config_lpRec
+from neural_network.utils import yolov3_post_process, yolov3_post_process_char_seg
+import neural_network.config_charRec as config_charRec
+import neural_network.config_charSeg as config_charSeg
+import neural_network.config_digitRec as config_digitRec
+import neural_network.config_lpRec as config_lpRec
 
 
 def detect_plate(image, config):
-    rknn = RKNNLite(verbose=True)
+    rknn = RKNNLite(verbose=False)
     if rknn.load_rknn(config.RKNN_MODEL_PATH) != 0:
         print('Load RKNN model failed!')
         return [], []
@@ -68,7 +68,7 @@ def segment_chars(image,config):
     Returns up to 7 highest-scoring character detections.
     """
     # Initialize RKNN
-    rknn = RKNNLite(verbose=True)
+    rknn = RKNNLite(verbose=False)
     ret = rknn.load_rknn(config.RKNN_MODEL_PATH)
     if ret != 0:
         print('Load RKNN model failed!')
@@ -287,15 +287,15 @@ import cv2
 import time
 from rknnlite.api import RKNNLite
 
-from utils import yolov3_post_process, yolov3_post_process_char_seg
-import config_charRec
-import config_charSeg
-import config_digitRec
-import config_lpRec
+from neural_network.utils import yolov3_post_process, yolov3_post_process_char_seg
+import neural_network.config_charRec as config_charRec
+import neural_network.config_charSeg as config_charSeg
+import neural_network.config_digitRec as config_digitRec
+import neural_network.config_lpRec as config_lpRec
 
 
 def detect_plate(image, config):
-    rknn = RKNNLite(verbose=True)
+    rknn = RKNNLite(verbose=False)
     if rknn.load_rknn(config.RKNN_MODEL_PATH) != 0:
         print('Load RKNN model failed!')
         return [], []
@@ -351,7 +351,7 @@ def segment_chars(image,config):
     Returns up to 7 highest-scoring character detections.
     """
     # Initialize RKNN
-    rknn = RKNNLite(verbose=True)
+    rknn = RKNNLite(verbose=False)
     ret = rknn.load_rknn(config.RKNN_MODEL_PATH)
     if ret != 0:
         print('Load RKNN model failed!')
@@ -404,7 +404,7 @@ def segment_chars(image,config):
         bottom = min(image.shape[0], int(y + h))
         
         char_img = image[top:bottom, left:right]
-        
+
         # Resize to target dimensions (32x96)
         char_img = cv2.resize(char_img, (32, 96))
         cropped_chars.append(char_img)
@@ -588,6 +588,8 @@ def license_plate_recognition_pipeline(image):
         print('No license plate detected')
         return None, 0
 
+    print('detectou placa')
+
     # Use the plate with highest confidence
     best_plate = plates[0]
     plate_confidence = plate_scores[0]
@@ -596,6 +598,8 @@ def license_plate_recognition_pipeline(image):
     char_images = segment_chars(best_plate, config_charSeg)
     if len(char_images) != 7:  # Expecting 7 characters
         print(f'Expected 7 characters, but found {len(char_images)}')
+
+    print('segmentou placa')
 
     # Step 3 & 4: Recognize characters
     plate_number = ''
@@ -612,6 +616,7 @@ def license_plate_recognition_pipeline(image):
                 recognition_results.append((i, letter, confidence, 'letter'))
             else:
                 plate_number += '?'
+    print('segmentou letras')
 
     # Process last 4 characters as digits
     for i in range(3, 7):
@@ -623,6 +628,7 @@ def license_plate_recognition_pipeline(image):
                 recognition_results.append((i, digit, confidence, 'digit'))
             else:
                 plate_number += '?'
+    print('segmentou digitos')
 
     # Calculate average confidence
     average_confidence = total_confidence / (len(recognition_results) + 1)  # +1 for plate detection

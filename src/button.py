@@ -7,8 +7,8 @@ from gpiod.line import Bias, Edge
 
 
 async def async_watch_line_value(stop_event, event_listener):
-    CHIP_PATH = "/dev/gpiochip1"
-    LINE_OFFSET = 31
+    CHIP_PATH = "/dev/gpiochip0"
+    LINE_OFFSET = 14
     # Configura o GPIO com debounce e detecção de bordas
     with gpiod.request_lines(
         CHIP_PATH,

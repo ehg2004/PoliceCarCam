@@ -6,7 +6,7 @@ import gpiod
 async def buzzer():
     # Configurar o chip e a linha GPIO
     CHIP = "/dev/gpiochip4"  # Verifique qual gpiochip corresponde ao seu pino
-    LINE_OFFSET = 110  # Altere para o número correto do GPIO
+    LINE_OFFSET = 1  # Altere para o número correto do GPIO
 
     # Configurar a linha como saída
     chip = gpiod.Chip(CHIP)

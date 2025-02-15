@@ -8,4 +8,4 @@ NUM_CLS = 1
 LISTSIZE = 4 + 1 + NUM_CLS
 MAX_BOXES = 500
 CLASSES = ('character',)
-RKNN_MODEL_PATH = './rknnModels/kl_charSeg.rknn'
+RKNN_MODEL_PATH = './neural_network/rknnModels/kl_charSeg.rknn'
