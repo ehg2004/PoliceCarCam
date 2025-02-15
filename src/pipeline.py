@@ -10,6 +10,7 @@ import cv2
 # TODO: Test detect_plate function with and without the pipeline
 async def detect_plate():
     while (1):
+        
         await asyncio.sleep(0.1)
         plate, score = neural_network.license_plate_recognition_pipeline(g.global_frame)
         if score > 0.8:

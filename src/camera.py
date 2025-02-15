@@ -25,11 +25,11 @@ async def record_video_with_location(event: asyncio.Event):
         event.clear()
 
         if not g.global_recording:
-            lcd.escrever_lcd("None Plate", "* Detected")
+            lcd.escrever_lcd("None Plate     *", "Detected")
             init_recording()
         else:
             print("Recording stopped and saved.")
-            lcd.escrever_lcd("None Plate", "  Detected")
+            lcd.escrever_lcd("None Plate", "Detected")
             g.global_recording = False
             g.global_out.release()
 

@@ -10,24 +10,58 @@ import neural_network.config_charSeg as config_charSeg
 import neural_network.config_digitRec as config_digitRec
 import neural_network.config_lpRec as config_lpRec
 
+rknnPlate = RKNNLite(verbose=False)
+rknnSeg = RKNNLite(verbose=False)
+rknnChar = RKNNLite(verbose=False)
+rknnDigit = RKNNLite(verbose=False)
 
-def detect_plate(image, config):
-    rknn = RKNNLite(verbose=False)
-    if rknn.load_rknn(config.RKNN_MODEL_PATH) != 0:
+
+#Init lpRec
+if rknnPlate.load_rknn(config_lpRec.RKNN_MODEL_PATH) != 0:
         print('Load RKNN model failed!')
         return [], []
-    
-    if rknn.init_runtime() != 0:
-        print('Init runtime environment failed!')
+
+if rknnPlate.init_runtime() != 0:
+    print('Init runtime environment failed!')
+    return [], []
+
+#Init charSeg
+if rknnSeg.load_rknn(config_charSeg.RKNN_MODEL_PATH) != 0:
+        print('Load RKNN model failed!')
         return [], []
 
+if rknnSeg.init_runtime() != 0:
+    print('Init runtime environment failed!')
+    return [], []
+
+#Init charRec
+if rknnChar.load_rknn(config_charRec.RKNN_MODEL_PATH) != 0:
+        print('Load RKNN model failed!')
+        return [], []
+
+if rknnChar.init_runtime() != 0:
+    print('Init runtime environment failed!')
+    return [], []
+
+#Init digitRec
+if rknnDigit.load_rknn(config_digitRec.RKNN_MODEL_PATH) != 0:
+        print('Load RKNN model failed!')
+        return [], []
+
+if rknnDigit.init_runtime() != 0:
+    print('Init runtime environment failed!')
+    return [], []
+
+
+
+def detect_plate(image, config):
     img = cv2.resize(image, (416, 448))
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_input = np.expand_dims(img_rgb, axis=0)
     img = img.astype(np.uint8)
 
-    outputs = rknn.inference(inputs=[img_input])
-    rknn.release()
+    outputs = rknnPlate.inference(inputs=[img_input])
+    rknnPlate.release()
 
     input_data = []
     for output in outputs:
@@ -67,17 +101,6 @@ def segment_chars(image,config):
     Segment characters from the input image.
     Returns up to 7 highest-scoring character detections.
     """
-    # Initialize RKNN
-    rknn = RKNNLite(verbose=False)
-    ret = rknn.load_rknn(config.RKNN_MODEL_PATH)
-    if ret != 0:
-        print('Load RKNN model failed!')
-        return []
-    
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed!')
-        return []
 
     # Preprocess image
     img = cv2.resize(image, (256, 96))
@@ -85,7 +108,8 @@ def segment_chars(image,config):
     img_input = np.expand_dims(img_rgb, axis=0)
 
     # Inference
-    outputs = rknn.inference(inputs=[img_input])
+    outputs = rknnSeg.inference(inputs=[img_input])
+    rknnSeg.release()
 
     # Process outputs
     input_data = []
@@ -100,8 +124,6 @@ def segment_chars(image,config):
     # Use the char-specific post-processing
     boxes, classes, scores = yolov3_post_process_char_seg(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
     
-    rknn.release()
-
     if boxes is None:
         print("No characters detected")
         return []
@@ -140,15 +162,6 @@ def detect_digit(img, config):
         detected_digit: The detected digit (0-9) or None if no digit is detected
         confidence: Confidence score of the detection
     """
-    # Create RKNN object
-    rknn = RKNNLite(verbose=False)
-
-    # Load RKNN model
-    ret = rknn.load_rknn(config.RKNN_MODEL_PATH)
-    if ret != 0:
-        print('Load RKNN model failed!')
-        return None, 0
-
     # Set input dimensions from config
     input_image_width = config.input_w
     input_image_height = config.input_h
@@ -158,14 +171,10 @@ def detect_digit(img, config):
     img = img.astype(np.uint8)
     img = np.expand_dims(img, axis=0)
 
-    # Init runtime environment
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed!')
-        return None, 0
-
     # Inference
-    outputs = rknn.inference(inputs=[img])
+    outputs = rknnDigit.inference(inputs=[img])
+    # Release RKNN runtime
+    rknnDigit.release()
 
     # Process outputs
     input_data = []
@@ -180,9 +189,6 @@ def detect_digit(img, config):
 
     # Post-processing
     boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-
-    # Release RKNN runtime
-    rknn.release()
 
     # Return results
     if boxes is not None and len(boxes) > 0:
@@ -206,14 +212,6 @@ def detect_letter(image, config):
         detected_letter: The detected letter (A-Z) or None if no letter is detected
         confidence: Confidence score of the detection
     """
-    # Create RKNN object
-    rknn = RKNNLite(verbose=False)
-
-    # Load RKNN model
-    ret = rknn.load_rknn(config.MODEL_PATH)
-    if ret != 0:
-        print('Load RKNN model failed!')
-        return None, 0
 
     # Set input dimensions
     input_image_width = config.input_w
@@ -230,14 +228,10 @@ def detect_letter(image, config):
     img = img.astype(np.uint8)
     img = np.expand_dims(img, axis=0)
 
-    # Init runtime environment
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed!')
-        return None, 0
-
     # Inference
-    outputs = rknn.inference(inputs=[img])
+    outputs = rknnChar.inference(inputs=[img])
+    # Release RKNN runtime
+    rknnChar.release()
 
     # Process outputs
     input_data = []
@@ -252,9 +246,6 @@ def detect_letter(image, config):
 
     # Post-processing
     boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
-
-    # Release RKNN runtime
-    rknn.release()
 
     # Return results
     if boxes is not None and len(boxes) > 0:
@@ -319,7 +310,8 @@ def detect_plate(image, config):
         output = output.reshape(batch, SPAN, config.LISTSIZE, height, width)
         output = output.transpose(0, 3, 4, 1, 2)
         output = output[0]
-        input_data.append(output)
+        input_data.append(output)    # Release RKNN runtime
+    rknn.release()
 
     boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
     if boxes is None:
@@ -598,6 +590,7 @@ def license_plate_recognition_pipeline(image):
     char_images = segment_chars(best_plate, config_charSeg)
     if len(char_images) != 7:  # Expecting 7 characters
         print(f'Expected 7 characters, but found {len(char_images)}')
+        return None, 0
 
     print('segmentou placa')
 

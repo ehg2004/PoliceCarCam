@@ -6,7 +6,7 @@ import sqlite3
 
 
 def backup_to_sqlite():
-    HOST = "localhost:5432"
+    HOST = "0.tcp.sa.ngrok.io:12484"
     DATABASE = "postgres"
     USER = "postgres"
     PASSWORD = "postgres"
