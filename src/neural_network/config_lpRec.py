@@ -1,4 +1,4 @@
-OBJ_THRESH = 0.4
+OBJ_THRESH = 0.3
 NMS_THRESH = 0.5
 anchors = [[1,2], [1,3], [1,5], [2, 3], [3,5]]
 masks = [[3, 4], [0, 1, 2]]
