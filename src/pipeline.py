@@ -22,7 +22,9 @@ async def detect_plate():
             has_log, type, severity = database.get_plate_from_database(plate)
             if has_log:
                 camera.init_recording()
-                lcd.escrever_lcd(f"{plate} {severity}", f"* {type}")
+                str1 = f"{plate} {severity}              "
+                str1[15] = "*"
+                lcd.escrever_lcd(str1, f"{type}")
                 await buzzer.buzzer()
 
 def release():
