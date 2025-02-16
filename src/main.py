@@ -2,6 +2,7 @@ import asyncio
 import cv2
 import database
 import button
+import lcd
 import wifi
 import camera
 import pipeline
@@ -20,6 +21,8 @@ async def main():
     stop_event = asyncio.Event()
     wifi_event = asyncio.Event()
     buttom_event = asyncio.Event()
+    
+    lcd.escrever_lcd("Police Car Cam", "")
 
     try:
         await asyncio.gather(
