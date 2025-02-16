@@ -333,6 +333,7 @@ def license_plate_recognition_pipeline(image):
     char_images = segment_chars(best_plate, config_charSeg)
     if len(char_images) != 7:  # Expecting 7 characters
         print(f'Expected 7 characters, but found {len(char_images)}')
+        return None, 0
 
     print('segmentou placa')
 
