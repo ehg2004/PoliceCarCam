@@ -41,9 +41,16 @@ def detect_plate(image, config):
     boxes, classes, scores = yolov3_post_process(input_data, config.anchors, config.masks, config.OBJ_THRESH, config.NMS_THRESH)
     if boxes is None:
         return [], []
+    
+    # Create a list of detections (box, score)
+    detections = list(zip(boxes, scores))
+
+    # Order top detections
+    top_detections = sorted(detections, key=lambda x: float(x[1]), reverse=True)
 
     detected_plates = []
-    for box in boxes:
+    sorted_scores = []
+    for box, score in top_detections:
         x, y, w, h = box
         x *= image.shape[1]
         y *= image.shape[0]
@@ -58,9 +65,11 @@ def detect_plate(image, config):
         top = max(0, int(y - expand_y))
         right = min(image.shape[1], int(x + w + expand_x))
         bottom = min(image.shape[0], int(y + h + expand_y))
-        detected_plates.append(image[top:bottom, left:right])
 
-    return detected_plates, scores
+        detected_plates.append(image[top:bottom, left:right])
+        sorted_scores.append(score)
+
+    return detected_plates, sorted_scores
 
 def segment_chars(image,config):
     """
@@ -106,9 +115,18 @@ def segment_chars(image,config):
         print("No characters detected")
         return []
 
-    # Crop characters
+    # Create a list of detections (box, score)
+    detections = list(zip(boxes, scores))
+
+    # Extract top 7 highest-scoring detections
+    top_detections = sorted(detections, key=lambda x: float(x[1]), reverse=True)[:7]
+
+    # Sort detections left to right (by x-coordinate)
+    top_detections = sorted(top_detections, key=lambda x: float(x[0][0]))
+
+    # Crop and process selected characters
     cropped_chars = []
-    for box in boxes:
+    for box, _ in top_detections:
         x, y, w, h = box
         x *= image.shape[1]
         y *= image.shape[0]
@@ -333,7 +351,7 @@ def license_plate_recognition_pipeline(image):
                 recognition_results.append((i, letter, confidence, 'letter'))
             else:
                 plate_number += '?'
-    print('segmentou letras')
+    print('reconheceu letras')
 
     # Process last 4 characters as digits
     for i in range(3, 7):
@@ -345,7 +363,7 @@ def license_plate_recognition_pipeline(image):
                 recognition_results.append((i, digit, confidence, 'digit'))
             else:
                 plate_number += '?'
-    print('segmentou digitos')
+    print('reconheceu digitos')
 
     # Calculate average confidence
     average_confidence = total_confidence / (len(recognition_results) + 1)  # +1 for plate detection
