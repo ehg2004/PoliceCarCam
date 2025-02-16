@@ -34,6 +34,7 @@ async def main():
         print("\nInterrupção manual detectada. Encerrando...")
     finally:
         stop_event.set()  # Sinaliza para parar a tarefa
+        pipeline.release()
         print("Monitoramento encerrado.")
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import neural_network.index as neural_network
+import neural_network.indexClass as nn 
 import asyncio
 import lcd
 import database
@@ -7,21 +8,23 @@ import camera
 import main as g
 import cv2
 
-# TODO: Test detect_plate function with and without the pipeline
+# Create the recognizer instance once (initializing all models only one time)
+recognizer = nn.LicensePlateRecognizer()
+
 async def detect_plate():
-    while (1):
-        
+    while True:
         await asyncio.sleep(0.1)
-        plate, score = neural_network.license_plate_recognition_pipeline(g.global_frame)
+        plate, score = recognizer.license_plate_recognition_pipeline(g.global_frame)
         if score > 0.8:
             print(score, plate)
             cv2.imshow("detect_plate", g.global_frame)
-            cv2.waitKey(5000)
+            cv2.waitKey(500)
             has_log, type, severity = database.get_plate_from_database(plate)
-            if (has_log):
+            if has_log:
                 camera.init_recording()
                 lcd.escrever_lcd(f"{plate} {severity}", f"* {type}")
                 await buzzer.buzzer()
-        
-        
-        
+
+def release():
+    """Releases all RKNN resources."""
+    recognizer.release()
