@@ -1,25 +1,52 @@
-# PoliceCarCam
+# Police Car Cam
 
-conda create --prefix ./Tests/plateTest/env python==3.10 -y
-conda activate ./Tests/plateTest/env
-python3.10 -m pip install -r ./Tests/plateTest/Automatic-License-Plate-Recognition-using-YOLOv8/requirements.txt
-git clone https://github.com/abewley/sort Tests/plateTest/Automatic-License-Plate-Recognition-using-YOLOv8
-python3.10 -m pip install filterpy scikit-image lap
-## usar python3.10 e conda ou venv para ambiente
-## baixar modelo de https://drive.google.com/file/d/1Zmf5ynaTFhmln2z7Qvv-tgjkWQYQ9Zdw/view?usp=sharing para LPR (License Plate Recognition)
-## Para modelo da UFGRS: (Esse fork foi atualizado para python3, porem nao testei inteiro)
-cd Tests/plateTest
-git clone https://github.com/SothanaV/alpr-unconstrained.git
-## Para clonar os modelos da UFRGS
-cd alpr-unconstrained/
-rm -f get-networks.sh
-wget https://raw.githubusercontent.com/sergiomsilva/alpr-unconstrained/refs/heads/master/get-networks.sh
-bash get-networks.sh
+## Overview
+Police Car Cam is an embedded system designed to assist law enforcement by providing automatic license plate recognition (ALPR) using artificial intelligence and image processing. The system enhances vehicle monitoring and law enforcement efficiency by reducing reliance on manual checks and enabling real-time detection of irregular vehicles.
 
-## Falta utilizar o modelo do ALPR-using-YOLOv8 com o OCR da UFRGS
-## Para testar o alpr-unconstrained sozinho, necessário baixar o darknet e instalar, recomendo instalar na CPU mesmo
-## Não consegui usar o alpr-unconstrained com o keras para o LPR e o OCR dele ainda, deve ter algum problema
-## dentro do ALPR-using-YOLOv8 tem o testMain.py, que eu estava utilando para testar placa por placa do dataset da UFPR, que ficou localizado em 'Tests/plateTest/'
-## Se não for usar a placa dew video, tem que mudar na construtora do easyOCR no arquivo utils.py, e algumas coisas na main,
-## Se quiser testar o ALPR-using-YOLOv8, clonar o https://github.com/Muhammad-Zeerak-Khan/Automatic-License-Plate-Recognition-using-YOLOv8.git e seguir o tutorial dnv, posso ter mudado alguma coisa na main
-##
+https://github.com/user-attachments/assets/7fc2cd7b-dc6e-4a97-b623-4792a14b5203
+
+## Features
+- **Automatic License Plate Recognition (ALPR)**: Detects and recognizes vehicle license plates using convolutional neural networks (CNNs) based on the YOLOv3 model.
+- **Real-time Processing**: Powered by a Neural Processing Unit (NPU) for fast inference without requiring cloud computing.
+- **Embedded System**: Runs on Radxa ROCK 5C Lite, integrating a camera, GPS module, and LCD display.
+- **Local and Remote Database Integration**: Syncs with a centralized database to check for irregular vehicles.
+- **Alerts & Notifications**: Provides visual and auditory alerts for identified irregular vehicles.
+- **On-Demand Video Recording**: Captures video and location data for future investigations.
+
+## Technology Stack
+- **Software**:
+  - **YOLOv3-Tiny**: Object Detection Model
+  - **Darknet**: Neural Network Framework
+  - **RKNN Toolkit**: NPU Model Conversion Tool
+  - **SQLite/PostgreSQL**: Database
+  - **Python**: Programming Language
+- **Hardware**:
+  - **Radxa ROCK 5C Lite**: SBC
+  - **Logitech C920e**: Camera
+  - **NEO-6M**: GPS Module
+
+## Project Highlights
+### AI & Machine Learning:
+- Training convolutional neural networks (CNNs) for license plate recognition.
+- Optimizing deep learning models for embedded hardware.
+- Implementing real-time object detection with YOLO.
+
+### Embedded Systems:
+- Running AI models on edge devices without cloud dependency.
+- Integrating multiple hardware components into a single functional system.
+- Using a Neural Processing Unit (NPU) for low-latency inference.
+
+### Software Development:
+- Designing a structured pipeline for image acquisition, processing, and database interaction.
+- Implementing asynchronous processes to handle real-time detection and alerting.
+- Optimizing database queries for fast license plate lookups.
+
+## Contributors
+- Bruno Emanuel Zenatti
+- Enzo Holzmann Gaio
+- Felipe Stilner Eufranio
+- Ian Massanobu Santos Ishikawa
+
+## License
+This project is licensed under the MIT License.
+
