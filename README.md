@@ -1,5 +1,4 @@
 # Police Car Cam
-
 ## Overview
 Police Car Cam is an embedded system designed to assist law enforcement by providing automatic license plate recognition (ALPR) using artificial intelligence and image processing. The system enhances vehicle monitoring and law enforcement efficiency by reducing reliance on manual checks and enabling real-time detection of irregular vehicles.
 
@@ -12,6 +11,8 @@ https://github.com/user-attachments/assets/7fc2cd7b-dc6e-4a97-b623-4792a14b5203
 - **Local and Remote Database Integration**: Syncs with a centralized database to check for irregular vehicles.
 - **Alerts & Notifications**: Provides visual and auditory alerts for identified irregular vehicles.
 - **On-Demand Video Recording**: Captures video and location data for future investigations.
+
+https://github.com/user-attachments/assets/7a20699d-2f5d-4bd8-aba6-e7bdd41be9eb
 
 ## Technology Stack
 - **Software**:
